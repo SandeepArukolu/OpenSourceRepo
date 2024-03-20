@@ -18,7 +18,7 @@ namespace OpenSourceProj.Repositorys
         public UserInfo GetLoginInfo(LoginModal loginModal)
         {         
          var list = _dbcontext.Users.Where(x => x.Email == loginModal.Email && x.Password == loginModal.Password).FirstOrDefault();
-
+            string dd = "";
             return  list;
         }
 
