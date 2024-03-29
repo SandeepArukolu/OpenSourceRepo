@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OpenSourceProj.DataAccess;
 using OpenSourceProj.DbContextInfo;
-using OpenSourceProj.Modals;
 using OpenSourceProj.Repositorys;
 using System.Configuration;
 using System.Text;

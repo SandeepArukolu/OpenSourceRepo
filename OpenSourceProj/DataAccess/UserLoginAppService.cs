@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using OpenSourceProj.DbContextInfo;
 using OpenSourceProj.DbTables;
 using OpenSourceProj.Modals;
+using OpenSourceProj.Repositorys;
 
-namespace OpenSourceProj.Repositorys
+namespace OpenSourceProj.DataAccess
 {
-    public class UserLoginAppService:IUserLoginAppService
+    public class UserLoginAppService : IUserLoginAppService
     {
         private readonly DbContextFile _dbcontext;
 
@@ -16,18 +17,18 @@ namespace OpenSourceProj.Repositorys
         }
 
         public UserInfo GetLoginInfo(LoginModal loginModal)
-        {         
-         var list = _dbcontext.Users.Where(x => x.Email == loginModal.Email && x.Password == loginModal.Password).FirstOrDefault();
-            return  list;
+        {
+            var list = _dbcontext.Users.Where(x => x.Email == loginModal.Email && x.Password == loginModal.Password).FirstOrDefault();
+            return list;
         }
 
-        
+
         public async Task SaveUser(UserInfo userinfo)
         {
             var reg = _dbcontext.Users.AddAsync(userinfo);
             await _dbcontext.SaveChangesAsync();
 
-           
+
             //List<UserInfo> list = new List<UserInfo> { 
 
             //    new UserInfo{FullName="sai",Email="sai@gmail.com",Password="snns",RePassword="dhhd",MobileNo=837733773}
