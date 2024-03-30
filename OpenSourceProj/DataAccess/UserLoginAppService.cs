@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using OpenSourceProj.DbContextInfo;
 using OpenSourceProj.DbTables;
 using OpenSourceProj.Modals;
 using OpenSourceProj.Repositorys;
-
+using System.Threading;
 namespace OpenSourceProj.DataAccess
 {
     public class UserLoginAppService : IUserLoginAppService
@@ -16,27 +17,26 @@ namespace OpenSourceProj.DataAccess
             _dbcontext = dbcontext;
         }
 
-        public UserInfo GetLoginInfo(LoginModal loginModal)
+        public async Task<UserInfo> GetLoginInfo(LoginModal loginModal)
         {
             var list = _dbcontext.Users.Where(x => x.Email == loginModal.Email && x.Password == loginModal.Password).FirstOrDefault();
-            return list;
+            return await Task.FromResult(list);
         }
 
 
-        public async Task SaveUser(UserInfo userinfo)
+        public async Task<bool> SaveUser(UserInfo userinfo, CancellationToken cancellationToken)
         {
-            var reg = _dbcontext.Users.AddAsync(userinfo);
-            await _dbcontext.SaveChangesAsync();
+            _dbcontext.Users?.AddAsync(userinfo);
+            await _dbcontext.SaveChangesAsync(cancellationToken);
+            return true;
 
 
-            //List<UserInfo> list = new List<UserInfo> { 
-
+            //List<UserInfo> list = new List<UserInfo> {
+            //    new UserInfo{FullName="sai",Email="sai@gmail.com",Password="snns",RePassword="dhhd",MobileNo=837733773},
             //    new UserInfo{FullName="sai",Email="sai@gmail.com",Password="snns",RePassword="dhhd",MobileNo=837733773}
             //}.ToList();
-
-
-            //await _dbcontext.Users.BulkInsertAsync(list);
-
+            // _dbcontext.Users.BulkInsertAsync(list);
+            //_dbcontext.SaveChangesAsync();
         }
     }
 }

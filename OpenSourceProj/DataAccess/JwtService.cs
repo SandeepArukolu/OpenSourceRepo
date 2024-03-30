@@ -9,22 +9,14 @@ namespace OpenSourceProj.DataAccess
 {
     public class JwtService : IJwtService
     {
-        public string? Secretkey { get; set; }
-
-        public int TokenDuration { get; set; }
-
         private readonly IConfiguration _configuration;
-
         public JwtService(IConfiguration _config)
         {
             _configuration = _config;
-            Secretkey = _config.GetSection("JwtConfig").GetSection("Key").Value;
-            TokenDuration = int.Parse(_config.GetSection("JwtConfig").GetSection("Duration").Value);
         }
-
-        public string GenerateToken(UserInfo userinfo)
+        public async Task<string> GenerateToken(UserInfo userinfo)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Secretkey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("JwtConfig").GetSection("Key").Value));
             var signature = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var payload = new[]
@@ -38,10 +30,12 @@ namespace OpenSourceProj.DataAccess
                 issuer: "localhost",
                 audience: "localhost",
                 claims: payload,
-                expires: DateTime.Now.AddMinutes(TokenDuration),
+                expires: DateTime.Now.AddMinutes(int.Parse(_configuration.GetSection("JwtConfig").GetSection("Duration").Value)),
                 signingCredentials: signature
                 );
-            return new JwtSecurityTokenHandler().WriteToken(jwtToken);
+
+            string FinalToken = new JwtSecurityTokenHandler().WriteToken(jwtToken);
+            return await Task.FromResult(FinalToken);
         }
     }
 }

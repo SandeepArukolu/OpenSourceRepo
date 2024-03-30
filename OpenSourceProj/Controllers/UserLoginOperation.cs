@@ -19,41 +19,26 @@ namespace OpenSourceProj.Controllers
             _jwtService = jwtService;
         }
 
-       
         [HttpPost]
         [Route("UserLogin")]
-        public IActionResult Login(LoginModal loginModal)
+        public async Task<IActionResult> Login(LoginModal loginModal)
         {
-          var response=  _userRepostiory.GetLoginInfo(loginModal);
+            var response = await _userRepostiory.GetLoginInfo(loginModal);
             if (response != null)
             {
-               string Token = _jwtService.GenerateToken(response);
+                string Token = await _jwtService.GenerateToken(response);
                 return Ok(Token);
             }
             return Ok();
         }
         [HttpPost]
         [Route("UserSignIn")]
+        [AllowAnonymous]
         public async Task<IActionResult> register(UserInfo userinfo)
         {
-          var response =  _userRepostiory.SaveUser(userinfo);
+            var cancellationTokenSource = new CancellationTokenSource();
+            var response = await _userRepostiory.SaveUser(userinfo, cancellationTokenSource.Token);
             return Ok();
         }
-        //[HttpGet("{id:int}")]
-        //public IActionResult Test(int id)
-        //{
-        //    List<UserInfo> list = new List<UserInfo> {
-
-        //        new UserInfo{FullName="sai",Email="sai@gmail.com",Password="snns",RePassword="dhhd",MobileNo=837733773}
-        //    }.ToList();
-
-        //    return Ok(list);
-        //}
-        //[HttpGet]
-        //[Route("{x:alpha}")]
-        //public IActionResult Test(string x)
-        //{
-        //    return Ok("string method executed");
-        //}
     }
 }
