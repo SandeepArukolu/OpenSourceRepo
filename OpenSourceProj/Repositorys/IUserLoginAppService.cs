@@ -5,7 +5,7 @@ namespace OpenSourceProj.Repositorys
 {
     public interface IUserLoginAppService
     {
-       UserInfo GetLoginInfo(LoginModal loginModal);
-        Task SaveUser(UserInfo userinfo);
+       Task<UserInfo> GetLoginInfo(LoginModal loginModal);
+        Task<bool> SaveUser(UserInfo userinfo, CancellationToken cancellationToken);
     }
 }
