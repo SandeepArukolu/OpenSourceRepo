@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OpenSourceProj.DataAccess;
 using OpenSourceProj.DbContextInfo;
+using OpenSourceProj.Modals;
 using OpenSourceProj.Repositorys;
+using Serilog;
 using System.Configuration;
 using System.Text;
 
@@ -32,6 +34,24 @@ builder.Services.AddCors(options =>
         });   
 });
 
+//Serilog
+// Configure Serilog
+string ? logDirectory  = builder.Configuration.GetValue<string>("LogsInternalPath");
+
+Log.Logger = new LoggerConfiguration()
+    //.WriteTo.Console()      // Log to console
+    .WriteTo.File(Path.Combine(logDirectory, ".txt"), rollingInterval: RollingInterval.Day)  // Log to file (optional)
+    .CreateLogger();
+
+// Use Serilog for logging in the app
+builder.Logging.ClearProviders();  // Optional: clear default logging providers
+builder.Logging.AddSerilog();
+
+//Global Execption
+builder.Services.AddExceptionHandler<GlobalExecption>();
+//builder.Services.AddProblemDetails(); // Enables structured error responses
+
+
 //Jwt Configuration
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(x =>
 {
@@ -50,6 +70,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 
 var app = builder.Build();
+
+//Global Execption
+app.UseExceptionHandler(_ => { });
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
