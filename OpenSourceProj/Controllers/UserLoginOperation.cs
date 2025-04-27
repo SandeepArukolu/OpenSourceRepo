@@ -1,13 +1,21 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using OpenSourceProj.DataAccess;
+using OpenSourceProj.DateFilterGenericRepo;
+using OpenSourceProj.DateFilterGenericRepo.GenericRepoService;
+using OpenSourceProj.DateFilterGenericRepo.IGenericService;
 using OpenSourceProj.DbTables;
+using OpenSourceProj.Migrations;
 using OpenSourceProj.Modals;
 using OpenSourceProj.Repositorys;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace OpenSourceProj.Controllers
 {
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UserLoginOperation : ControllerBase
@@ -22,20 +30,17 @@ namespace OpenSourceProj.Controllers
             _logger= logger;
         }
 
-        [HttpPost]
-        [Route("UserLogin")]
+        [HttpPost("UserLogin")]  
         public async Task<IActionResult> Login(LoginModal loginModal)
-        {
-            
+        {         
             var response = await _userRepostiory.GetLoginInfo(loginModal);
             if (response != null)
             {
-                string Token = await _jwtService.GenerateToken(response);
+                string token =  await _jwtService.GenerateToken(response);
 
-                return Ok(Token);
+                return Ok(new { Token = token });
             }
-            throw new DivideByZeroException();
-            return Ok();
+            return Ok(new { Token = string.Empty });
         }
         [HttpPost]
         [Route("UserSignIn")]
@@ -48,16 +53,12 @@ namespace OpenSourceProj.Controllers
         }
 
 
-        [HttpGet("GetResultById/{id:int}")]
+        [HttpPost("GetResultById/{id:int}")]
+        [Authorize]
         public IActionResult GetResultById(int id)
         {
-            throw new NotImplementedException();
+            return Ok(id);
         }
 
-        [HttpGet()]
-        public IActionResult GetResultById()
-        {           
-            return Ok();
-        }
     }
 }
