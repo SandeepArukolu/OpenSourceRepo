@@ -28,9 +28,9 @@ namespace OpenSourceProj.DataAccess
             };
             var jwtToken = new JwtSecurityToken(
                 issuer: "localhost",
-                audience: "localhost",
+                audience: "myapp",
                 claims: payload,
-                expires: DateTime.Now.AddMinutes(int.Parse(_configuration.GetSection("JwtConfig").GetSection("Duration").Value)),
+                expires: DateTime.Now.AddHours(int.Parse(_configuration.GetSection("JwtConfig").GetSection("Duration").Value)),
                 signingCredentials: signature
                 );
 

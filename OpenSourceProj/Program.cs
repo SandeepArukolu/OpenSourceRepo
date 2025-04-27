@@ -2,12 +2,16 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OpenSourceProj.DataAccess;
+using OpenSourceProj.DateFilterGenericRepo.GenericRepoService;
+using OpenSourceProj.DateFilterGenericRepo.IGenericService;
 using OpenSourceProj.DbContextInfo;
+using OpenSourceProj.HostedBackGroundService;
 using OpenSourceProj.Modals;
 using OpenSourceProj.Repositorys;
 using Serilog;
 using System.Configuration;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,17 +26,52 @@ builder.Services.AddDbContext<DbContextFile>(opts => opts.UseSqlServer(builder.C
 builder.Services.AddControllers();
 //DI
 builder.Services.AddScoped<IUserLoginAppService, UserLoginAppService>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
 builder.Services.AddScoped<IJwtService, JwtService>();
-//Enable Cors
+// 1. Add CORS Policy
+
+// Register the hosted service
+//builder.Services.AddHostedService<ScheduledTaskService>();
+
+
 builder.Services.AddCors(options =>
-{  
-        options.AddDefaultPolicy(builder =>
-        {
-            builder.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });   
+{
+    options.AddPolicy("AllowAllOrigins", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
 });
+
+
+// 2. Add Authentication & Authorization
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Set to true in production
+        options.RequireHttpsMetadata = false;
+
+        // Store the token to use later if needed
+        options.SaveToken = true;
+
+        // Validate token expiration and signature
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidIssuer = builder.Configuration["JwtConfig:Issuer"],  // "localhost" or your value
+            ValidAudience = builder.Configuration["JwtConfig:Audience"],  // "localhost" or your value
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtConfig:Key"))),
+            ClockSkew = TimeSpan.FromMinutes(5)  // Default clock skew, can adjust based on need
+        };
+    });
+
+//Configure Authorization
+builder.Services.AddAuthorization();
 
 //Serilog
 // Configure Serilog
@@ -51,30 +90,11 @@ builder.Logging.AddSerilog();
 builder.Services.AddExceptionHandler<GlobalExecption>();
 //builder.Services.AddProblemDetails(); // Enables structured error responses
 
-
-//Jwt Configuration
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(x =>
-{
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer="localhost",
-        ValidAudience="localhost",
-        IssuerSigningKey= new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtConfig:Key"))),
-        ClockSkew=TimeSpan.Zero
-    };
-});
-
-
 var app = builder.Build();
 
 //Global Execption
 app.UseExceptionHandler(_ => { });
-
-
+app.UseCors("AllowAllOrigins");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -86,5 +106,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyHeader());
 app.Run();
